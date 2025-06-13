@@ -1,12 +1,19 @@
 import React, { useState } from 'react';
-import { Box, Paper, Typography, Avatar, Button, List, ListItem, ListItemIcon, ListItemText, ListItemSecondaryAction, IconButton,
-    Dialog, DialogTitle, DialogContent, DialogActions, TextField, Alert, Chip, Divider } from '@mui/material';
-import { Email, Google, Facebook, Link as LinkIcon, LinkOff, AccountCircle} from '@mui/icons-material';
+import {
+    Box, Container, Paper, Typography, Avatar, Button, List, ListItem, ListItemIcon, ListItemText, ListItemSecondaryAction, IconButton,
+    Dialog, DialogTitle, DialogContent, DialogActions, TextField, Alert, Chip, AppBar, Toolbar
+} from '@mui/material';
+import {
+    Email, Google, Facebook, Link as LinkIcon, LinkOff, AccountCircle, ArrowBack, Security
+} from '@mui/icons-material';
 import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { PersonalInfoSection } from './PersonalInfoSection';
 import { type ProviderInfo } from '../types/auth';
 
 export const UserProfile: React.FC = () => {
     const { user, linkProvider, unlinkProvider, getLinkedProviders, logout } = useAuth();
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -112,92 +119,128 @@ export const UserProfile: React.FC = () => {
     };
 
     return (
-        <Box p={3}>
-            <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-                <Box display="flex" alignItems="center" mb={3}>
-                    <Avatar
-                        src={user.photoURL || undefined}
-                        sx={{ width: 80, height: 80, mr: 3 }}
-                    />
-                    <Box>
-                        <Typography variant="h4">
-                            {user.displayName || 'Usuario'}
-                        </Typography>
-                        <Typography variant="body1" color="textSecondary">
-                            {user.email}
-                        </Typography>
-                        <Chip
-                            label={`${linkedProviders.length} método${linkedProviders.length !== 1 ? 's' : ''} vinculado${linkedProviders.length !== 1 ? 's' : ''}`}
-                            color="primary"
-                            size="small"
-                            sx={{ mt: 1 }}
+        <Box>
+            <AppBar position="static">
+                <Toolbar>
+                    <IconButton
+                        edge="start"
+                        color="inherit"
+                        onClick={() => navigate('/dashboard')}
+                        sx={{ mr: 2 }}
+                    >
+                        <ArrowBack />
+                    </IconButton>
+                    <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                        Mi Perfil
+                    </Typography>
+                </Toolbar>
+            </AppBar>
+
+            <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+                <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+                    <Box display="flex" alignItems="center" mb={2}>
+                        <Avatar
+                            src={user.photoURL || undefined}
+                            sx={{ width: 80, height: 80, mr: 3 }}
                         />
-                    </Box>
-                </Box>
-
-                {error && (
-                    <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
-                        {error}
-                    </Alert>
-                )}
-
-                {success && (
-                    <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess('')}>
-                        {success}
-                    </Alert>
-                )}
-
-                <Typography variant="h6" gutterBottom>
-                    Métodos de Autenticación
-                </Typography>
-
-                <List>
-                    {providers.map((provider) => (
-                        <ListItem key={provider.id}>
-                            <ListItemIcon>
-                                {getProviderIcon(provider.icon)}
-                            </ListItemIcon>
-                            <ListItemText
-                                primary={provider.name}
-                                secondary={provider.connected ? 'Conectado' : 'No conectado'}
+                        <Box>
+                            <Typography variant="h4">
+                                {user.displayName || 'Usuario'}
+                            </Typography>
+                            <Typography variant="body1" color="textSecondary">
+                                {user.email}
+                            </Typography>
+                            <Chip
+                                label={`${linkedProviders.length} método${linkedProviders.length !== 1 ? 's' : ''} vinculado${linkedProviders.length !== 1 ? 's' : ''}`}
+                                color="primary"
+                                size="small"
+                                sx={{ mt: 1 }}
                             />
-                            <ListItemSecondaryAction>
-                                {provider.connected ? (
-                                    <IconButton
-                                        edge="end"
-                                        onClick={() => handleUnlinkProvider(provider.id)}
-                                        disabled={loading || linkedProviders.length <= 1}
-                                        color="error"
-                                    >
-                                        <LinkOff />
-                                    </IconButton>
-                                ) : (
-                                    <IconButton
-                                        edge="end"
-                                        onClick={() => handleLinkProvider(provider.id)}
-                                        disabled={loading}
-                                        color="primary"
-                                    >
-                                        <LinkIcon />
-                                    </IconButton>
-                                )}
-                            </ListItemSecondaryAction>
-                        </ListItem>
-                    ))}
-                </List>
+                        </Box>
+                    </Box>
+                </Paper>
+                <PersonalInfoSection />
+                <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+                    <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
+                        <Security sx={{ mr: 1, verticalAlign: 'middle' }} />
+                        Métodos de Autenticación
+                    </Typography>
 
-                <Divider sx={{ my: 3 }} />
+                    {error && (
+                        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+                            {error}
+                        </Alert>
+                    )}
 
-                <Button
-                    variant="outlined"
-                    color="error"
-                    onClick={logout}
-                    fullWidth
-                >
-                    Cerrar Sesión
-                </Button>
-            </Paper>
-            <Dialog open={linkEmailDialog} onClose={() => setLinkEmailDialog(false)}>
+                    {success && (
+                        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess('')}>
+                            {success}
+                        </Alert>
+                    )}
+
+                    <List>
+                        {providers.map((provider) => (
+                            <ListItem key={provider.id}>
+                                <ListItemIcon>
+                                    {getProviderIcon(provider.icon)}
+                                </ListItemIcon>
+                                <ListItemText
+                                    primary={provider.name}
+                                    secondary={provider.connected ? 'Conectado' : 'No conectado'}
+                                />
+                                <ListItemSecondaryAction>
+                                    {provider.connected ? (
+                                        <IconButton
+                                            edge="end"
+                                            onClick={() => handleUnlinkProvider(provider.id)}
+                                            disabled={loading || linkedProviders.length <= 1}
+                                            color="error"
+                                            title={linkedProviders.length <= 1 ? 'No puedes desvincular tu último método' : 'Desvincular'}
+                                        >
+                                            <LinkOff />
+                                        </IconButton>
+                                    ) : (
+                                        <IconButton
+                                            edge="end"
+                                            onClick={() => handleLinkProvider(provider.id)}
+                                            disabled={loading}
+                                            color="primary"
+                                            title="Vincular"
+                                        >
+                                            <LinkIcon />
+                                        </IconButton>
+                                    )}
+                                </ListItemSecondaryAction>
+                            </ListItem>
+                        ))}
+                    </List>
+                </Paper>
+
+                <Paper elevation={3} sx={{ p: 3 }}>
+                    <Typography variant="h6" gutterBottom>
+                        Acciones de Cuenta
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
+                        <Button
+                            variant="outlined"
+                            onClick={() => navigate('/dashboard')}
+                            sx={{ flex: 1 }}
+                        >
+                            Volver al Dashboard
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            color="error"
+                            onClick={logout}
+                            sx={{ flex: 1 }}
+                        >
+                            Cerrar Sesión
+                        </Button>
+                    </Box>
+                </Paper>
+            </Container>
+
+            <Dialog open={linkEmailDialog} onClose={() => setLinkEmailDialog(false)} maxWidth="sm" fullWidth>
                 <DialogTitle>Vincular Email/Contraseña</DialogTitle>
                 <DialogContent>
                     <TextField
@@ -207,6 +250,7 @@ export const UserProfile: React.FC = () => {
                         value={emailData.email}
                         onChange={(e) => setEmailData({ ...emailData, email: e.target.value })}
                         margin="normal"
+                        required
                     />
                     <TextField
                         fullWidth
@@ -215,14 +259,23 @@ export const UserProfile: React.FC = () => {
                         value={emailData.password}
                         onChange={(e) => setEmailData({ ...emailData, password: e.target.value })}
                         margin="normal"
+                        required
+                        helperText="La contraseña debe tener al menos 6 caracteres"
                     />
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setLinkEmailDialog(false)}>
+                    <Button onClick={() => {
+                        setLinkEmailDialog(false);
+                        setEmailData({ email: '', password: '' });
+                    }}>
                         Cancelar
                     </Button>
-                    <Button onClick={handleLinkEmail} disabled={loading} variant="contained">
-                        Vincular
+                    <Button
+                        onClick={handleLinkEmail}
+                        disabled={loading || !emailData.email || !emailData.password}
+                        variant="contained"
+                    >
+                        {loading ? 'Vinculando...' : 'Vincular'}
                     </Button>
                 </DialogActions>
             </Dialog>

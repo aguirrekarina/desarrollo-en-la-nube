@@ -1,12 +1,16 @@
 import React from 'react';
-import { Box, Container, Typography, Paper, Card, CardContent, Button, AppBar, Toolbar,
-    Avatar, Menu, MenuItem, IconButton } from '@mui/material';
-import { AccountCircle, Security, Settings } from '@mui/icons-material';
+import {
+    Box, Container, Typography, Paper, Card, CardContent, Button,
+    AppBar, Toolbar, Avatar, Menu, MenuItem, IconButton
+} from '@mui/material';
+import {
+    AccountCircle, Security, Settings } from '@mui/icons-material';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { PersonalInfoSection } from './../components/PersonalInfoSection';
 
 export const Dashboard: React.FC = () => {
-    const { user, logout, getLinkedProviders } = useAuth();
+    const { user, userProfile, logout, getLinkedProviders } = useAuth();
     const navigate = useNavigate();
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
@@ -39,30 +43,20 @@ export const Dashboard: React.FC = () => {
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <Typography variant="body2" sx={{ mr: 2 }}>
-                            {user?.displayName || user?.email}
+                            {userProfile?.displayName || user?.displayName || user?.email}
                         </Typography>
-                        <IconButton
-                            size="large"
-                            onClick={handleMenu}
-                            color="inherit"
-                        >
+                        <IconButton size="large" onClick={handleMenu} color="inherit">
                             <Avatar
-                                src={user?.photoURL || undefined}
+                                src={userProfile?.photoURL || user?.photoURL || undefined}
                                 sx={{ width: 32, height: 32 }}
                             />
                         </IconButton>
-                        <Menu
-                            anchorEl={anchorEl}
-                            open={Boolean(anchorEl)}
-                            onClose={handleClose}
-                        >
+                        <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
                             <MenuItem onClick={handleProfile}>
                                 <AccountCircle sx={{ mr: 1 }} />
                                 Perfil
                             </MenuItem>
-                            <MenuItem onClick={handleLogout}>
-                                Cerrar Sesión
-                            </MenuItem>
+                            <MenuItem onClick={handleLogout}>Cerrar Sesión</MenuItem>
                         </Menu>
                     </Box>
                 </Toolbar>
@@ -73,16 +67,21 @@ export const Dashboard: React.FC = () => {
                     Dashboard
                 </Typography>
 
-                <Box sx={{
-                    display: 'flex',
-                    flexDirection: { xs: 'column', md: 'row' },
-                    gap: 3,
-                    mb: 3
-                }}>
-                    <Box sx={{ width: { xs: '100%', md: '66.666%' } }}>
+                <Box
+                    sx={{
+                        display: 'flex',
+                        flexDirection: { xs: 'column', md: 'row' },
+                        gap: 3,
+                        mb: 3
+                    }}
+                >
+                    <Box sx={{ flex: 2 }}>
                         <Paper sx={{ p: 3 }}>
                             <Typography variant="h6" gutterBottom>
-                                Bienvenido, {user?.displayName || 'Usuario'}!
+                                ¡Bienvenido, {userProfile?.displayName || user?.displayName || 'Usuario'}!
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                Gestiona tu perfil y configuración de seguridad desde aquí.
                             </Typography>
                             <Button
                                 variant="contained"
@@ -94,7 +93,7 @@ export const Dashboard: React.FC = () => {
                         </Paper>
                     </Box>
 
-                    <Box sx={{ width: { xs: '100%', md: '33.333%' } }}>
+                    <Box sx={{ flex: 1 }}>
                         <Card>
                             <CardContent>
                                 <Typography variant="h6" gutterBottom>
@@ -121,30 +120,7 @@ export const Dashboard: React.FC = () => {
                         </Card>
                     </Box>
                 </Box>
-
-                <Box sx={{ mb: 3 }}>
-                    <Paper sx={{ p: 3 }}>
-                        <Typography variant="h6" gutterBottom>
-                            Información de Usuario
-                        </Typography>
-                        <Box sx={{
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            gap: 2
-                        }}>
-                            <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 16px)' } }}>
-                                <Typography variant="subtitle2">Email:</Typography>
-                                <Typography variant="body1">{user?.email}</Typography>
-                            </Box>
-                            <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 16px)' } }}>
-                                <Typography variant="subtitle2">Nombre:</Typography>
-                                <Typography variant="body1">
-                                    {user?.displayName || 'No especificado'}
-                                </Typography>
-                            </Box>
-                        </Box>
-                    </Paper>
-                </Box>
+                <PersonalInfoSection />
             </Container>
         </Box>
     );

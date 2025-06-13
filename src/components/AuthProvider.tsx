@@ -1,6 +1,6 @@
 import React, { createContext, useEffect, useState, type ReactNode } from 'react';
 import type { User } from 'firebase/auth';
-import type { AuthContextType } from '../types/auth';
+import type { AuthContextType, UserProfile } from '../types/auth';
 import {
     onAuthStateChange,
     signUpWithEmail as firebaseSignUp,
@@ -14,6 +14,12 @@ import {
     getLinkedProviders,
     logOut
 } from '../Firebase/auth';
+import {
+    createUserProfile,
+    getUserProfile,
+    updateUserProfile,
+    calculateAge
+} from '../Firebase/firestore';
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -23,11 +29,40 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
+    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
 
+    const loadUserProfile = async (currentUser: User) => {
+        try {
+            let profile = await getUserProfile(currentUser.uid);
+
+            if (!profile) {
+                const basicProfile: Partial<UserProfile> = {
+                    email: currentUser.email || '',
+                    displayName: currentUser.displayName || '',
+                    photoURL: currentUser.photoURL || ''
+                };
+
+                await createUserProfile(currentUser.uid, basicProfile);
+                profile = await getUserProfile(currentUser.uid);
+            }
+
+            setUserProfile(profile);
+        } catch (error) {
+            console.error('Error loading user profile:', error);
+        }
+    };
+
     useEffect(() => {
-        const unsubscribe = onAuthStateChange((user) => {
+        const unsubscribe = onAuthStateChange(async (user) => {
             setUser(user);
+
+            if (user) {
+                await loadUserProfile(user);
+            } else {
+                setUserProfile(null);
+            }
+
             setLoading(false);
         });
 
@@ -116,12 +151,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
     };
 
+    const updateProfile = async (updates: Partial<UserProfile>): Promise<void> => {
+        if (!user) throw new Error('No user logged in');
+
+        try {
+            // Si se actualiza la fecha de nacimiento, calcular la edad
+            if (updates.fechaNacimiento) {
+                updates.edad = calculateAge(updates.fechaNacimiento);
+            }
+
+            await updateUserProfile(user.uid, updates);
+            await refreshProfile();
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            throw error;
+        }
+    };
+
+    const refreshProfile = async (): Promise<void> => {
+        if (!user) return;
+        await loadUserProfile(user);
+    };
+
     const getLinkedProvidersForCurrentUser = (): string[] => {
         return user ? getLinkedProviders(user) : [];
     };
 
     const value: AuthContextType = {
         user,
+        userProfile,
         loading,
         signUpWithEmail,
         signInWithEmail,
@@ -130,7 +188,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         linkProvider,
         unlinkProvider,
         logout,
-        getLinkedProviders: getLinkedProvidersForCurrentUser
+        getLinkedProviders: getLinkedProvidersForCurrentUser,
+        updateProfile,
+        refreshProfile
     };
 
     return (
