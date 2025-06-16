@@ -3,11 +3,11 @@ import {
     Box, Container, Typography, Paper, Card, CardContent, Button,
     AppBar, Toolbar, Avatar, Menu, MenuItem, IconButton
 } from '@mui/material';
-import {
-    AccountCircle, Security, Settings } from '@mui/icons-material';
+import { AccountCircle, Security, Settings } from '@mui/icons-material';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { PersonalInfoSection } from './../components/PersonalInfoSection';
+import { PostsFeed } from '../components/PostsFeed';
 
 export const Dashboard: React.FC = () => {
     const { user, userProfile, logout, getLinkedProviders } = useAuth();
@@ -39,7 +39,7 @@ export const Dashboard: React.FC = () => {
             <AppBar position="static">
                 <Toolbar>
                     <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                        Mi Aplicación
+                        Mi Red Social
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <Typography variant="body2" sx={{ mr: 2 }}>
@@ -63,20 +63,9 @@ export const Dashboard: React.FC = () => {
             </AppBar>
 
             <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-                <Typography variant="h4" gutterBottom>
-                    Dashboard
-                </Typography>
-
-                <Box
-                    sx={{
-                        display: 'flex',
-                        flexDirection: { xs: 'column', md: 'row' },
-                        gap: 3,
-                        mb: 3
-                    }}
-                >
-                    <Box sx={{ flex: 2 }}>
-                        <Paper sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', flexDirection: ['column', 'row'], gap: 3 }}>
+                    <Box sx={{ flex: 1 }}>
+                        <Paper sx={{ p: 3, mb: 3 }}>
                             <Typography variant="h6" gutterBottom>
                                 ¡Bienvenido, {userProfile?.displayName || user?.displayName || 'Usuario'}!
                             </Typography>
@@ -87,13 +76,12 @@ export const Dashboard: React.FC = () => {
                                 variant="contained"
                                 onClick={() => navigate('/profile')}
                                 startIcon={<Settings />}
+                                fullWidth
                             >
                                 Ir a Perfil
                             </Button>
                         </Paper>
-                    </Box>
 
-                    <Box sx={{ flex: 1 }}>
                         <Card>
                             <CardContent>
                                 <Typography variant="h6" gutterBottom>
@@ -118,9 +106,16 @@ export const Dashboard: React.FC = () => {
                                 </Button>
                             </CardContent>
                         </Card>
+
+                        <Box sx={{ mt: 3 }}>
+                            <PersonalInfoSection />
+                        </Box>
+                    </Box>
+
+                    <Box sx={{ flex: 2 }}>
+                        <PostsFeed />
                     </Box>
                 </Box>
-                <PersonalInfoSection />
             </Container>
         </Box>
     );
