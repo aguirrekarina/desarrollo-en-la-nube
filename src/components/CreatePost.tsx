@@ -1,38 +1,45 @@
 import React, { useState } from 'react';
 import { Paper, TextField, Button, Box, Avatar, CircularProgress, Input } from '@mui/material';
-import { Send, Image } from '@mui/icons-material';
+import { Send, Image, Close } from '@mui/icons-material';
 import { useAuth } from '../hooks/useAuth';
 import { usePosts } from '../hooks/usePosts';
-
-const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-};
+import { cloudinaryService } from '../services/cloudinaryService';
 
 export const CreatePost: React.FC = () => {
     const { user, userProfile } = useAuth();
     const { createPost, loading } = usePosts();
     const [content, setContent] = useState('');
-    const [imageData, setImageData] = useState('');
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string>('');
+    const [uploading, setUploading] = useState(false);
 
-    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-
         if (file.size > 5 * 1024 * 1024) {
             alert('La imagen debe ser menor a 5MB');
             return;
         }
+        if (!file.type.startsWith('image/')) {
+            alert('Solo se permiten archivos de imagen');
+            return;
+        }
 
-        try {
-            const base64 = await fileToBase64(file);
-            setImageData(base64);
-        } catch (error) {
-            console.error('Error al cargar imagen:', error);
+        setImageFile(file);
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            setImagePreview(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const removeImage = () => {
+        setImageFile(null);
+        setImagePreview('');
+        const fileInput = document.getElementById('image-upload') as HTMLInputElement;
+        if (fileInput) {
+            fileInput.value = '';
         }
     };
 
@@ -40,17 +47,38 @@ export const CreatePost: React.FC = () => {
         e.preventDefault();
         if (!content.trim()) return;
 
+        setUploading(true);
+
         try {
+            let imageURL: string | undefined;
+            if (imageFile) {
+                try {
+                    imageURL = await cloudinaryService.uploadImage(imageFile);
+                } catch (imageError) {
+                    console.error('Error uploading image:', imageError);
+                    alert('Error al subir la imagen. El post se creará sin imagen.');
+                }
+            }
             await createPost({
                 content: content.trim(),
-                imageURL: imageData || undefined
+                imageURL
             });
             setContent('');
-            setImageData('');
+            setImageFile(null);
+            setImagePreview('');
+            const fileInput = document.getElementById('image-upload') as HTMLInputElement;
+            if (fileInput) {
+                fileInput.value = '';
+            }
+
         } catch (error) {
             console.error('Error creating post:', error);
+            alert('Error al crear el post. Inténtalo de nuevo.');
+        } finally {
+            setUploading(false);
         }
     };
+    const isSubmitDisabled = !content.trim() || loading || uploading;
 
     return (
         <Paper sx={{ p: 2, mb: 2 }}>
@@ -70,15 +98,40 @@ export const CreatePost: React.FC = () => {
                             value={content}
                             onChange={(e) => setContent(e.target.value)}
                             sx={{ mb: 2 }}
+                            disabled={uploading}
                         />
-
-                        {imageData && (
-                            <Box sx={{ mb: 2 }}>
+                        {imagePreview && (
+                            <Box sx={{ mb: 2, position: 'relative', display: 'inline-block' }}>
                                 <img
-                                    src={imageData}
+                                    src={imagePreview}
                                     alt="Preview"
-                                    style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '8px' }}
+                                    style={{
+                                        maxWidth: '100%',
+                                        maxHeight: '200px',
+                                        borderRadius: '8px',
+                                        objectFit: 'cover'
+                                    }}
                                 />
+                                <Button
+                                    onClick={removeImage}
+                                    sx={{
+                                        position: 'absolute',
+                                        top: 8,
+                                        right: 8,
+                                        minWidth: 'auto',
+                                        width: 32,
+                                        height: 32,
+                                        borderRadius: '50%',
+                                        backgroundColor: 'rgba(0,0,0,0.6)',
+                                        color: 'white',
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(0,0,0,0.8)',
+                                        }
+                                    }}
+                                    disabled={uploading}
+                                >
+                                    <Close fontSize="small" />
+                                </Button>
                             </Box>
                         )}
 
@@ -88,9 +141,16 @@ export const CreatePost: React.FC = () => {
                                 onChange={handleImageUpload}
                                 sx={{ display: 'none' }}
                                 id="image-upload"
+                                inputProps={{ accept: 'image/*' }}
+                                disabled={uploading}
                             />
                             <label htmlFor="image-upload">
-                                <Button component="span" startIcon={<Image />} size="small">
+                                <Button
+                                    component="span"
+                                    startIcon={<Image />}
+                                    size="small"
+                                    disabled={uploading}
+                                >
                                     Imagen
                                 </Button>
                             </label>
@@ -98,11 +158,17 @@ export const CreatePost: React.FC = () => {
                             <Button
                                 type="submit"
                                 variant="contained"
-                                disabled={!content.trim() || loading}
-                                startIcon={loading ? <CircularProgress size={16} /> : <Send />}
+                                disabled={isSubmitDisabled}
+                                startIcon={
+                                    uploading ? <CircularProgress size={16} /> :
+                                        loading ? <CircularProgress size={16} /> :
+                                            <Send />
+                                }
                                 size="small"
                             >
-                                {loading ? 'Publicando...' : 'Publicar'}
+                                {uploading ? 'Subiendo imagen...' :
+                                    loading ? 'Publicando...' :
+                                        'Publicar'}
                             </Button>
                         </Box>
                     </form>
