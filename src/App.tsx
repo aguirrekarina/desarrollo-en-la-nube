@@ -5,34 +5,37 @@ import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { Profile } from './pages/Profile';
 import {PostProvider} from "./components/PostProvider.tsx";
+import { NotificationProvider } from './components/NotificationProvider.tsx';
 
 function App() {
     return (
         <AuthProvider>
-            <PostProvider>
-                <Router>
-                    <Routes>
-                        <Route path="/login" element={<Login />} />
-                        <Route
-                            path="/dashboard"
-                            element={
-                                <ProtectedRoute>
-                                    <Dashboard />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route
-                            path="/profile"
-                            element={
-                                <ProtectedRoute>
-                                    <Profile />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                    </Routes>
-                </Router>
-            </PostProvider>
+            <NotificationProvider>
+                <PostProvider>
+                    <Router>
+                        <Routes>
+                            <Route path="/login" element={<Login />} />
+                            <Route
+                                path="/dashboard"
+                                element={
+                                    <ProtectedRoute>
+                                        <Dashboard />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/profile"
+                                element={
+                                    <ProtectedRoute>
+                                        <Profile />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                        </Routes>
+                    </Router>
+                </PostProvider>
+            </NotificationProvider>
         </AuthProvider>
     );
 }

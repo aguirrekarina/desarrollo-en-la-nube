@@ -2,6 +2,7 @@ import React, { createContext, useState, type ReactNode } from 'react';
 import type { Post, PostContextType, CreatePostData } from '../types/post';
 import { PostRepository } from '../repository/postRepository';
 import { useAuth } from '../hooks/useAuth';
+import { sendNotificationToAll } from '../services/notificationService';
 
 export const PostContext = createContext<PostContextType | null>(null);
 
@@ -25,6 +26,13 @@ export const PostProvider: React.FC<PostProviderProps> = ({ children }) => {
                 userProfile.displayName || user.displayName || 'Usuario',
                 userProfile.photoURL || user.photoURL || undefined,
                 postData
+            );
+            const authorName = userProfile.displayName || user.displayName || 'Alguien';
+            await sendNotificationToAll(
+                'Nuevo Post',
+                `${authorName} publicó algo nuevo`,
+                user.uid,
+                authorName
             );
             await refreshPosts();
         } catch (error) {
