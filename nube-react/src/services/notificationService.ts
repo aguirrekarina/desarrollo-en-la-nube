@@ -18,7 +18,6 @@ export const requestNotificationPermission = async (userId: string): Promise<str
                     userId,
                     createdAt: serverTimestamp()
                 });
-                console.log('Token FCM guardado:', token);
                 return token;
             }
         }

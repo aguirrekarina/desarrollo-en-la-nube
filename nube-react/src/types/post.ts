@@ -6,14 +6,39 @@ export interface Post {
     content: string;
     imageURL?: string;
     likesCount: number;
+    dislikesCount: number;
     commentsCount: number;
     createdAt: any;
     updatedAt: any;
+    likedBy?: string[];
+    dislikedBy?: string[];
+    isModerated?: boolean;
+    moderated?: boolean;
+    moderatedAt?: any;
 }
 
 export interface CreatePostData {
     content: string;
     imageURL?: string;
+}
+
+export interface LikeDislikeData {
+    postId: string;
+    userId: string;
+    action: 'like' | 'dislike' | 'remove';
+}
+
+export interface Notification {
+    id: string;
+    userId: string;
+    fromUserId: string;
+    fromUserName?: string;
+    fromUserPhoto?: string;
+    type: 'like' | 'dislike' | 'comment' | 'moderation';
+    postId: string;
+    message: string;
+    read: boolean;
+    createdAt: any;
 }
 
 export interface PostContextType {

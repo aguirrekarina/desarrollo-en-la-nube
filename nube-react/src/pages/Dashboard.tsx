@@ -8,6 +8,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { PersonalInfoSection } from './../components/PersonalInfoSection';
 import { PostsFeed } from '../components/PostsFeed';
+import {NotificationBell} from "../components/NotificationBell.tsx";
 
 export const Dashboard: React.FC = () => {
     const { user, userProfile, logout, getLinkedProviders } = useAuth();
@@ -41,6 +42,7 @@ export const Dashboard: React.FC = () => {
                     <Typography variant="h6" sx={{ flexGrow: 1 }}>
                         Mi Red Social
                     </Typography>
+                    <NotificationBell />
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <Typography variant="body2" sx={{ mr: 2 }}>
                             {userProfile?.displayName || user?.displayName || user?.email}
